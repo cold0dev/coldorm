@@ -40,6 +40,21 @@ def convert_value(v):
         return f"'{v}'"
     else:
         return v
+    
+def where_builder(key, value):
+    command = ""
+    if type(key) is list and type(value) is list:
+            if len(key) != len(value):
+                raise RuntimeError(f"Different count of keys({len(key)}) and values({len(value)})")
+            for i in range(len(key)):
+                k = key[i]
+                v = value[i]
+                command += f"{k}={convert_value(v)} "
+                if i != len(key) - 1:
+                    command += "AND "
+    else:
+        command += f"{key}={convert_value(value)}"
+    return command
 
 class ModelByteStruct:
     class Endianness:
@@ -111,6 +126,12 @@ class Model:
     
     def from_yaml(self, yaml):
         raise RuntimeError("NOT IMPLEMETED")
+    
+    def from_bytes(self, byte_struct: ModelByteStruct, data: bytes):
+        raise RuntimeError("NOT IMPLEMETED")
+    
+    def to_bytes(self, byte_struct: ModelByteStruct) -> bytes:
+        raise RuntimeError("NOT IMPLEMETED")
 
 class Table:
     def __init__(self, name, parent, model, fields):
@@ -135,17 +156,7 @@ class Table:
     def get_by(self, key, value):
         command = f"SELECT * FROM {self.name} WHERE "
 
-        if type(key) is list and type(value) is list:
-            if len(key) != len(value):
-                raise RuntimeError(f"Different count of keys({len(key)}) and values({len(value)})")
-            for i in range(len(key)):
-                k = key[i]
-                v = value[i]
-                command += f"{k}={convert_value(v)} "
-                if i != len(key) - 1:
-                    command += "AND "
-        else:
-            command += f"{key}={convert_value(value)}"
+        command += where_builder(key, value)
 
         if LOG:
             print(f"Executing command: {command}")
@@ -181,7 +192,10 @@ class Table:
         self.parent.connection.commit()
 
     def remove(self, key, value):
-        command = f"DELETE FROM {self.name} WHERE {key}={convert_value(value)}"
+        command = f"DELETE FROM {self.name} WHERE "
+
+        command += where_builder(key, value)
+
         if LOG:
             print(f"Executing command: {command}")
         self.cursor.execute(command)
