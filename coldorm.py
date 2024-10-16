@@ -4,6 +4,13 @@ import json
 
 LOG = False
 
+class DBField:
+    """
+    Represents a field in a database table.
+    Contains parameters used for table creation.
+    """
+    pass
+
 ormlog = os.getenv("ORMLOG")
 if ormlog is not None and ormlog == "1":
     LOG = True
@@ -15,9 +22,8 @@ def extract_name_from_model(model):
 def extract_fields_from_model(model):
     fields = []
     for entry in dir(model):
-        if entry.startswith("__"):
-            continue
-        if getattr(model, entry) is not None:
+        e = getattr(model, entry)
+        if type(e) is not DBField:
             continue
         fields.append(entry)
 
@@ -249,6 +255,8 @@ class ColdORM:
             model_name = extract_name_from_model(model)
             if migration:
                 command = create_table_from_model(model_name, fields)
+                if LOG:
+                    print(f"Executing command: `{command}`")
                 self.cursor.execute(command)
             self.tables.append(Table(model_name, self, model, fields))
 
