@@ -39,7 +39,7 @@ def convert_value(v):
     if type(v) is str:
         return f"'{v}'"
     else:
-        return v
+        return str(v)
     
 def where_builder(key, value):
     command = ""
@@ -55,6 +55,18 @@ def where_builder(key, value):
     else:
         command += f"{key}={convert_value(value)}"
     return command
+
+def get_updated_fields(fields, entry):
+    output = []
+    for field in fields:
+        v = getattr(entry, field)
+        
+        if v is None:
+            continue
+
+        output.append({"name": field, "value": convert_value(v)})
+    
+    return output
 
 class ModelByteStruct:
     class Endianness:
@@ -159,7 +171,7 @@ class Table:
         command += where_builder(key, value)
 
         if LOG:
-            print(f"Executing command: {command}")
+            print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = res.fetchall()
         return self.pack_entries(res)
@@ -167,7 +179,7 @@ class Table:
     def get_all(self):
         command = f"SELECT * FROM {self.name}"
         if LOG:
-            print(f"Executing command: {command}")
+            print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = res.fetchall()
         return self.pack_entries(res)
@@ -194,7 +206,7 @@ class Table:
 
         command = command[:-1] + ")"
         if LOG:
-            print(f"Executing command: {command}")
+            print(f"Executing command: `{command}`")
         self.cursor.execute(command)
         self.parent.connection.commit()
 
@@ -204,13 +216,25 @@ class Table:
         command += where_builder(key, value)
 
         if LOG:
-            print(f"Executing command: {command}")
+            print(f"Executing command: `{command}`")
         self.cursor.execute(command)
         self.parent.connection.commit()
 
     def update_by(self, key, value, entry):
         command = f"UPDATE {self.name} SET "
+        updated_fields = get_updated_fields(self.fields, entry)
 
+        for updated_field in updated_fields:
+            command += f"{updated_field["name"]} = {updated_field["value"]}, "
+
+        command = command[:-2] + " WHERE "
+        
+        command += where_builder(key, value)
+
+        if LOG:
+            print(f"Executing command: `{command}`")
+        self.cursor.execute(command)
+        self.parent.connection.commit()
 
 class ColdORM:
     def __init__(self, name: str, models: list[type], migration: bool = False):
@@ -228,7 +252,7 @@ class ColdORM:
                 self.cursor.execute(command)
             self.tables.append(Table(model_name, self, model, fields))
 
-    def get_table(self, name):
+    def get_table(self, name) -> Table:
         for table in self.tables:
             if table.name == name:
                 return table
@@ -237,7 +261,7 @@ class ColdORM:
     def list_tables(self):
         command = "SELECT name FROM sqlite_master WHERE type='table'"
         if LOG:
-            print(f"Executing command: {command}")
+            print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = res.fetchall()
         return [e[0] for e in res]
