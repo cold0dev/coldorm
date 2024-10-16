@@ -35,14 +35,9 @@ def extract_by_fields(model, fields):
         output.append(getattr(model, field))
     return output
 
-
-def str_to_dbstr(s):
-    return f"'{s}'"
-
-
 def convert_value(v):
     if type(v) is str:
-        return str_to_dbstr(v)
+        return f"'{v}'"
     else:
         return v
 
