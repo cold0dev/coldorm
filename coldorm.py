@@ -1,15 +1,29 @@
 import sqlite3
 import os
 import json
+from enum import Enum, auto
 
 LOG = False
 
-class DBField:
+class FieldType(Enum):
+    INTEGER = auto()
+    REAL = auto()
+    TEXT = auto()
+    BLOB = auto()
+
+class Field:
     """
     Represents a field in a database table.
     Contains parameters used for table creation.
     """
-    pass
+    type: FieldType = None
+    primary_key: bool = False
+    auto_increment: bool = False
+
+    def __init__(self, type: FieldType, primary_key: bool = False, auto_increment: bool = False) -> None:
+        self.type = type
+        self.primary_key = primary_key
+        self.auto_increment = auto_increment
 
 ormlog = os.getenv("ORMLOG")
 if ormlog is not None and ormlog == "1":
@@ -23,7 +37,7 @@ def extract_fields_from_model(model):
     fields = []
     for entry in dir(model):
         e = getattr(model, entry)
-        if type(e) is not DBField:
+        if type(e) is not Field:
             continue
         fields.append(entry)
 
