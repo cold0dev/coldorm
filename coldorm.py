@@ -172,19 +172,26 @@ class Table:
         res = res.fetchall()
         return self.pack_entries(res)
 
+    def get_field(self, field):
+        command = ""
+        if type(field) is str:
+            command += f"'{field}',"
+        elif type(field) is int:
+            command += f"{field},"
+        elif type(field) is float:
+            command += f"{field},"
+        # TODO: add bytes support
+        else:
+            raise RuntimeError(f"Unsupported type of {field}")
+        
+        return command
+
     def add(self, entry):
         fields = extract_by_fields(entry, self.fields)
         command = f"INSERT INTO {self.name} VALUES ("
         for field in fields:
-            if type(field) is str:
-                command += f"'{field}',"
-            elif type(field) is int:
-                command += f"{field},"
-            elif type(field) is float:
-                command += f"{field},"
-            # TODO: add bytes support
-            else:
-                raise RuntimeError(f"Unsupported type of {field}")
+            command += self.get_field(field)
+
         command = command[:-1] + ")"
         if LOG:
             print(f"Executing command: {command}")
@@ -201,10 +208,8 @@ class Table:
         self.cursor.execute(command)
         self.parent.connection.commit()
 
-    def update_by(self, key, entry):
-        raise RuntimeError("NOT IMPLEMETED")
-
-    
+    def update_by(self, key, value, entry):
+        command = f"UPDATE {self.name} SET "
 
 
 class ColdORM:
