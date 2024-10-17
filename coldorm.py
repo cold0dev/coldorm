@@ -1,9 +1,12 @@
 import sqlite3
 import os
-import json
 from enum import Enum, auto
 
 LOG = False
+
+ormlog = os.getenv("ORMLOG")
+if ormlog is not None and ormlog == "1":
+    LOG = True
 
 class FieldType(Enum):
     INTEGER = auto()
@@ -39,9 +42,6 @@ class Field:
         self.primary_key = primary_key
         self.auto_increment = auto_increment
 
-ormlog = os.getenv("ORMLOG")
-if ormlog is not None and ormlog == "1":
-    LOG = True
 
 def extract_name_from_model(model):
     return str(model).split("'")[1].split(".")[1]
@@ -122,82 +122,6 @@ def get_updated_fields(fields, entry):
     
     return output
 
-class ModelByteStruct:
-    class Endianness:
-        BIG = 0
-        LITTLE = 1
-
-    fields = []
-    endianness = Endianness.BIG
-
-    def __init__(self, endianness = Endianness.BIG) -> None:
-        self.endianness = endianness
-
-    def convert_type(self, type):
-        types = {
-            "u8": "B",
-            "u16": "H",
-            "u32": "L",
-            "u64": "Q",
-            "i8": "b",
-            "i16": "h",
-            "i32": "l",
-            "i64": "q",
-            "f32": "f",
-            "f64": "d",
-            "str": "s",
-        }
-
-        return types[type]
-
-    def add_field(self, name, type):
-        self.fields.append({"name": name, "type": self.convert_type(type)})
-
-
-# Optional class used for serialization and deserialization 
-class Model:
-    def to_dict(self):
-        fields = {}
-        for entry in dir(self):
-            if entry.startswith("__"):
-                continue
-            if str(type(getattr(self, entry))) == "<class 'method'>":
-                continue
-            fields[entry] = getattr(self, entry)
-
-        return fields
-    
-    def from_dict(self, data):
-        for k, v in data.items():
-            setattr(self, k, v)
-
-    def to_json(self):
-        return json.dumps(self.to_dict())
-
-    def from_json(self, data):
-        obj = json.loads(data)
-        for key, value in obj.items():
-            if key.startswith("__"):
-                continue
-            setattr(self, key, value)
-
-    def to_xml(self):
-        raise RuntimeError("NOT IMPLEMETED")
-    
-    def from_xml(self, xml):
-        raise RuntimeError("NOT IMPLEMETED")
-    
-    def to_yaml(self):
-        raise RuntimeError("NOT IMPLEMETED")
-    
-    def from_yaml(self, yaml):
-        raise RuntimeError("NOT IMPLEMETED")
-    
-    def from_bytes(self, byte_struct: ModelByteStruct, data: bytes):
-        raise RuntimeError("NOT IMPLEMETED")
-    
-    def to_bytes(self, byte_struct: ModelByteStruct) -> bytes:
-        raise RuntimeError("NOT IMPLEMETED")
 
 class Table:
     def __init__(self, name, parent, model, fields):
