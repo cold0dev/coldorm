@@ -63,21 +63,30 @@ def convert_value(v):
         return f"'{v}'"
     else:
         return str(v)
+
+
+class WhereBuilder:pass
+class WhereBuilder:
+    command: str = ""
+
+    def __init__(self, key, value) -> None:
+        self.add(key, value)
+
+    def add(self, key, value, op = ""):
+        if len(self.command) != 0:
+            self.command += f" {op} "
+        self.command += f"{key}={convert_value(value)}"
     
-def where_builder(key, value):
-    command = ""
-    if type(key) is list and type(value) is list:
-            if len(key) != len(value):
-                raise RuntimeError(f"Different count of keys({len(key)}) and values({len(value)})")
-            for i in range(len(key)):
-                k = key[i]
-                v = value[i]
-                command += f"{k}={convert_value(v)} "
-                if i != len(key) - 1:
-                    command += "AND "
-    else:
-        command += f"{key}={convert_value(value)}"
-    return command
+    def AND(self, key, value) -> WhereBuilder:
+        self.add(key, value, "AND")
+        return self
+    
+    def OR(self, key, value) -> WhereBuilder:
+        self.add(key, value, "OR")
+        return self
+    
+    def get_command(self) -> str:
+        return self.command
 
 def get_updated_fields(fields, entry):
     output = []
@@ -190,10 +199,9 @@ class Table:
             output.append(self.pack_entry(entry))
         return output
 
-    def get_by(self, key, value):
+    def get_by(self, where: WhereBuilder):
         command = f"SELECT * FROM {self.name} WHERE "
-
-        command += where_builder(key, value)
+        command += where.get_command()
 
         if LOG:
             print(f"Executing command: `{command}`")
@@ -235,17 +243,17 @@ class Table:
         self.cursor.execute(command)
         self.parent.connection.commit()
 
-    def remove(self, key, value):
+    def remove(self, where: WhereBuilder):
         command = f"DELETE FROM {self.name} WHERE "
 
-        command += where_builder(key, value)
+        command += where.get_command()
 
         if LOG:
             print(f"Executing command: `{command}`")
         self.cursor.execute(command)
         self.parent.connection.commit()
 
-    def update_by(self, key, value, entry):
+    def update_by(self, where: WhereBuilder, entry):
         command = f"UPDATE {self.name} SET "
         updated_fields = get_updated_fields(self.fields, entry)
 
@@ -254,7 +262,7 @@ class Table:
 
         command = command[:-2] + " WHERE "
         
-        command += where_builder(key, value)
+        command += where.get_command()
 
         if LOG:
             print(f"Executing command: `{command}`")
