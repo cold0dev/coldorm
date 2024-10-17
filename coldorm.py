@@ -67,15 +67,13 @@ def convert_value(v):
 
 class WhereBuilder:pass
 class WhereBuilder:
-    command: str = ""
+    command: str = None
 
     def __init__(self, key, value) -> None:
-        self.add(key, value)
+        self.command = f"{key}={convert_value(value)}"
 
-    def add(self, key, value, op = ""):
-        if len(self.command) != 0:
-            self.command += f" {op} "
-        self.command += f"{key}={convert_value(value)}"
+    def add(self, key, value, op):
+        self.command += f" {op} {key}={convert_value(value)}"
     
     def AND(self, key, value) -> WhereBuilder:
         self.add(key, value, "AND")
