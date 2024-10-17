@@ -39,18 +39,21 @@ def extract_fields_from_model(model):
         e = getattr(model, entry)
         if type(e) is not Field:
             continue
-        fields.append(entry)
+        fields.append({"name": entry, "type": e})
 
     return fields
 
 
 def create_table_from_model(model_name, fields):
-    fields = ", ".join(fields)
-    return f"CREATE TABLE {model_name}({fields})"
+    fields_names = [field["name"] for field in fields]
+    fields_names = ", ".join(fields_names)
+    # TODO: add types and parameters to fields
+    return f"CREATE TABLE {model_name}({fields_names})"
 
 
 def extract_by_fields(model, fields):
     output = []
+    fields = [field["name"] for field in fields]
     for field in fields:
         output.append(getattr(model, field))
     return output
@@ -78,6 +81,7 @@ def where_builder(key, value):
 
 def get_updated_fields(fields, entry):
     output = []
+    fields = [field["name"] for field in fields]
     for field in fields:
         v = getattr(entry, field)
         
@@ -175,7 +179,8 @@ class Table:
 
     def pack_entry(self, entry):
         e = self.model()
-        for name, field in zip(self.fields, entry):
+        fields = [field["name"] for field in self.fields]
+        for name, field in zip(fields, entry):
             setattr(e, name, field)
         return e
 
