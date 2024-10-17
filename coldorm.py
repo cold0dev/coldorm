@@ -11,6 +11,20 @@ class FieldType(Enum):
     TEXT = auto()
     BLOB = auto()
 
+    @staticmethod
+    def type_to_string(t):
+        match t:
+            case FieldType.INTEGER:
+                return "INTEGER"
+            case FieldType.REAL:
+                return "REAL"
+            case FieldType.TEXT:
+                return "TEXT"
+            case FieldType.BLOB:
+                return "BLOB"
+            case _:
+                raise RuntimeError("Unsupported type")
+
 class Field:
     """
     Represents a field in a database table.
@@ -45,17 +59,27 @@ def extract_fields_from_model(model):
 
 
 def create_table_from_model(model_name, fields):
-    fields_names = [field["name"] for field in fields]
-    fields_names = ", ".join(fields_names)
-    # TODO: add types and parameters to fields
-    return f"CREATE TABLE {model_name}({fields_names})"
+    command = f"CREATE TABLE {model_name}("
+
+    for field in fields:
+        t: Field = field["type"]
+        command += f"{field["name"]} {FieldType.type_to_string(t.type)}"
+        if t.primary_key:
+            command += " PRIMARY KEY"
+        if t.auto_increment:
+            command += " AUTOINCREMENT"
+        command += ","
+
+    return command[:-1] + ")"
 
 
 def extract_by_fields(model, fields):
     output = []
     fields = [field["name"] for field in fields]
     for field in fields:
-        output.append(getattr(model, field))
+        value = getattr(model, field)
+        if value is None or type(value) is Field: continue
+        output.append({"name": field, "value": value})
     return output
 
 def convert_value(v):
@@ -92,8 +116,7 @@ def get_updated_fields(fields, entry):
     for field in fields:
         v = getattr(entry, field)
         
-        if v is None:
-            continue
+        if v is None or type(v) is Field: continue
 
         output.append({"name": field, "value": convert_value(v)})
     
@@ -231,9 +254,16 @@ class Table:
 
     def add(self, entry):
         fields = extract_by_fields(entry, self.fields)
-        command = f"INSERT INTO {self.name} VALUES ("
+        command = f"INSERT INTO {self.name} ("
+
         for field in fields:
-            command += self.get_field(field)
+            command += f"{field["name"]},"
+
+        command = command[:-1] + ")"
+        command += "VALUES ("
+
+        for field in fields:
+            command += self.get_field(field["value"])
 
         command = command[:-1] + ")"
         if LOG:
