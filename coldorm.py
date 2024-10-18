@@ -162,37 +162,23 @@ class Table:
         res = res.fetchall()
         return self._pack_entries(res)
 
-    def _get_field(self, field):
-        command = ""
-        if type(field) is str:
-            command += f"'{field}',"
-        elif type(field) is int:
-            command += f"{field},"
-        elif type(field) is float:
-            command += f"{field},"
-        # TODO: add bytes support
-        else:
-            raise RuntimeError(f"Unsupported type of {field}")
-        
-        return command
-
     def add(self, entry):
         fields = extract_by_fields(entry, self.fields)
+        values = [field["value"] for field in fields]
         command = f"INSERT INTO {self.name} ("
 
         for field in fields:
             command += f"{field["name"]},"
 
-        command = command[:-1] + ")"
-        command += "VALUES ("
+        command = command[:-1] + ") VALUES ("
 
         for field in fields:
-            command += self._get_field(field["value"])
+            command += "?,"
 
         command = command[:-1] + ")"
         if LOG:
-            print(f"Executing command: `{command}`")
-        self.cursor.execute(command)
+            print(f"Executing command: `{command}` with values {values}")
+        self.cursor.execute(command, values)
         self.parent.connection.commit()
 
     def remove(self, where: WhereBuilder):
@@ -208,17 +194,18 @@ class Table:
     def update(self, where: WhereBuilder, entry):
         command = f"UPDATE {self.name} SET "
         updated_fields = get_updated_fields(self.fields, entry)
+        values = [field["value"] for field in updated_fields]
 
         for updated_field in updated_fields:
-            command += f"{updated_field["name"]} = {updated_field["value"]}, "
+            command += f"{updated_field["name"]} = ?, "
 
         command = command[:-2] + " WHERE "
         
         command += where.get_command()
 
         if LOG:
-            print(f"Executing command: `{command}`")
-        self.cursor.execute(command)
+            print(f"Executing command: `{command}` with values {values}")
+        self.cursor.execute(command, values)
         self.parent.connection.commit()
 
 class ColdORM:
