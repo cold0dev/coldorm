@@ -205,7 +205,7 @@ class Table:
         self.cursor.execute(command)
         self.parent.connection.commit()
 
-    def update_by(self, where: WhereBuilder, entry):
+    def update(self, where: WhereBuilder, entry):
         command = f"UPDATE {self.name} SET "
         updated_fields = get_updated_fields(self.fields, entry)
 

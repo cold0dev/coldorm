@@ -24,22 +24,35 @@ for e in table.get_all():
     print(e.__dict__)
 
 class TestTableMethods(unittest.TestCase):
-    def test_get_all(self):
-        res = table.get_all()
+    def test01_get_all(self):
+        res: list[ExampleTable] = table.get_all()
         self.assertEqual(len(res), 3)
         self.assertEqual(res[0].id, 1)
         self.assertEqual(res[1].id, 2)
         self.assertEqual(res[2].id, 3)
 
-    def test_get_by(self):
+    def test02_get_by(self):
         wb = WhereBuilder("name", "NAME2")
-        res = table.get_by(wb)
+        res: list[ExampleTable] = table.get_by(wb)
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0].id, 2)
         wb = WhereBuilder("name", "NAME1").OR("name", "NAME3")
-        res = table.get_by(wb)
+        res: list[ExampleTable] = table.get_by(wb)
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0].id, 1)
+        self.assertEqual(res[1].id, 3)
+
+    def test03_update(self):
+        wb = WhereBuilder("name", "NAME2")
+        new = ExampleTable(None, None, 4.0)
+        table.update(wb, new)
+        res: list[ExampleTable] = table.get_by(wb)
+        self.assertEqual(res[0].value, 4.0)
+
+    def test04_remove(self):
+        wb = WhereBuilder("name", "NAME2")
+        table.remove(wb)
+        res: list[ExampleTable] = table.get_all()
         self.assertEqual(res[1].id, 3)
 
 if __name__ == '__main__':
