@@ -131,17 +131,17 @@ class Table:
         self.fields = fields
         self.model = model
 
-    def pack_entry(self, entry):
+    def _pack_entry(self, entry):
         e = self.model()
         fields = [field["name"] for field in self.fields]
         for name, field in zip(fields, entry):
             setattr(e, name, field)
         return e
 
-    def pack_entries(self, entries):
+    def _pack_entries(self, entries):
         output = []
         for entry in entries:
-            output.append(self.pack_entry(entry))
+            output.append(self._pack_entry(entry))
         return output
 
     def get_by(self, where: WhereBuilder):
@@ -152,7 +152,7 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = res.fetchall()
-        return self.pack_entries(res)
+        return self._pack_entries(res)
 
     def get_all(self):
         command = f"SELECT * FROM {self.name}"
@@ -160,9 +160,9 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = res.fetchall()
-        return self.pack_entries(res)
+        return self._pack_entries(res)
 
-    def get_field(self, field):
+    def _get_field(self, field):
         command = ""
         if type(field) is str:
             command += f"'{field}',"
@@ -187,7 +187,7 @@ class Table:
         command += "VALUES ("
 
         for field in fields:
-            command += self.get_field(field["value"])
+            command += self._get_field(field["value"])
 
         command = command[:-1] + ")"
         if LOG:
