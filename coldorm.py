@@ -205,7 +205,7 @@ class Table:
             print(f"Executing command: `{command}` with values {values}")
         self.cursor.execute(command, values)
 
-class ColdORM:
+class Engine:
     def __init__(self, name: str, models: list[type], migration: bool = False):
         self.name = name
         self.tables = []

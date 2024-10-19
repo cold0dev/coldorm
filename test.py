@@ -1,4 +1,4 @@
-from coldorm import FieldType, Field, ColdORM, WhereBuilder
+from coldorm import FieldType, Field, Engine, WhereBuilder
 import os.path, os
 import unittest
 from dataclasses import dataclass
@@ -12,7 +12,7 @@ class ExampleTable:
     name: str = Field(FieldType.TEXT)
     value: float = Field(FieldType.REAL)
 
-orm = ColdORM("test", [ExampleTable], True)
+orm = Engine("test", [ExampleTable], True)
 
 table = orm.get_table("ExampleTable")
 
