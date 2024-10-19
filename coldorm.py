@@ -63,7 +63,8 @@ def create_table_from_model(model_name, fields):
 
     for field in fields:
         t: Field = field["type"]
-        command += f"{field["name"]} {FieldType.type_to_string(t.type)}"
+        name = field["name"]
+        command += f"{name} {FieldType.type_to_string(t.type)}"
         if t.primary_key:
             command += " PRIMARY KEY"
         if t.auto_increment:
@@ -168,7 +169,8 @@ class Table:
         command = f"INSERT INTO {self.name} ("
 
         for field in fields:
-            command += f"{field["name"]},"
+            name = field["name"]
+            command += f"{name},"
 
         command = command[:-1] + ") VALUES ("
 
@@ -199,7 +201,8 @@ class Table:
         values = [field["value"] for field in updated_fields]
 
         for updated_field in updated_fields:
-            command += f"{updated_field["name"]} = ?, "
+            name = updated_field["name"]
+            command += f"{name} = ?, "
 
         command = command[:-2] + " WHERE "
         
