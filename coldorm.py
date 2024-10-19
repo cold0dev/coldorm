@@ -180,6 +180,10 @@ class Table:
             print(f"Executing command: `{command}` with values {values}")
         self.cursor.execute(command, values)
 
+    def add_all(self, entries):
+        for entry in entries:
+            self.add(entry)
+
     def remove(self, where: WhereBuilder):
         command = f"DELETE FROM {self.name} WHERE "
 
