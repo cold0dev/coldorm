@@ -144,7 +144,7 @@ class Table:
             output.append(self._pack_entry(entry))
         return output
 
-    def get_by(self, where: WhereBuilder):
+    def get(self, where: WhereBuilder):
         command = f"SELECT * FROM {self.name} WHERE "
         command += where.get_command()
 
@@ -179,7 +179,6 @@ class Table:
         if LOG:
             print(f"Executing command: `{command}` with values {values}")
         self.cursor.execute(command, values)
-        self.parent.connection.commit()
 
     def remove(self, where: WhereBuilder):
         command = f"DELETE FROM {self.name} WHERE "
@@ -189,7 +188,6 @@ class Table:
         if LOG:
             print(f"Executing command: `{command}`")
         self.cursor.execute(command)
-        self.parent.connection.commit()
 
     def update(self, where: WhereBuilder, entry):
         command = f"UPDATE {self.name} SET "
@@ -206,7 +204,6 @@ class Table:
         if LOG:
             print(f"Executing command: `{command}` with values {values}")
         self.cursor.execute(command, values)
-        self.parent.connection.commit()
 
 class ColdORM:
     def __init__(self, name: str, models: list[type], migration: bool = False):
@@ -239,3 +236,6 @@ class ColdORM:
         res = self.cursor.execute(command)
         res = res.fetchall()
         return [e[0] for e in res]
+    
+    def commit(self):
+        self.connection.commit()
