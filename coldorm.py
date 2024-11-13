@@ -92,23 +92,20 @@ def convert_value(v):
 
 class WhereBuilder:pass
 class WhereBuilder:
-    command: str = None
-
     def __init__(self, key, value) -> None:
-        self.command = f"{key}={convert_value(value)}"
+        self.command = []
+        self.command.append({"key": key, "value": value, "op": ""}) 
 
-    def add(self, key, value, op):
-        self.command += f" {op} {key}={convert_value(value)}"
     
     def AND(self, key, value) -> WhereBuilder:
-        self.add(key, value, "AND")
+        self.command.append({"key": key, "value": value, "op": "and"}) 
         return self
     
     def OR(self, key, value) -> WhereBuilder:
-        self.add(key, value, "OR")
+        self.command.append({"key": key, "value": value, "op": "or"}) 
         return self
     
-    def get_command(self) -> str:
+    def get_command(self):
         return self.command
 
 def get_updated_fields(fields, entry):
@@ -147,13 +144,15 @@ class Table:
 
     def get(self, where: WhereBuilder):
         command = f"SELECT * FROM {self.name} WHERE "
-        command += where.get_command()
+        for entry in where.get_command():
+          command += f"{entry["op"]} {entry["key"]} = ?"
 
         if LOG:
             print(f"Executing command: `{command}`")
-        res = self.cursor.execute(command)
+        res = self.cursor.execute(command, [entry["value"] for entry in where.get_command()])
         res = res.fetchall()
         return self._pack_entries(res)
+
 
     def get_all(self):
         command = f"SELECT * FROM {self.name}"
@@ -188,12 +187,12 @@ class Table:
 
     def remove(self, where: WhereBuilder):
         command = f"DELETE FROM {self.name} WHERE "
-
-        command += where.get_command()
+        for entry in where.get_command():
+          command += f"{entry["op"]} {entry["key"]} = ?"
 
         if LOG:
             print(f"Executing command: `{command}`")
-        self.cursor.execute(command)
+        self.cursor.execute(command, [entry["value"] for entry in where.get_command()])
 
     def update(self, where: WhereBuilder, entry):
         command = f"UPDATE {self.name} SET "
@@ -205,12 +204,14 @@ class Table:
             command += f"{name} = ?, "
 
         command = command[:-2] + " WHERE "
+        for entry in where.get_command():
+          command += f"{entry["op"]} {entry["key"]} = ?"
         
-        command += where.get_command()
+        wheres = [entry["value"] for entry in where.get_command()]
 
         if LOG:
             print(f"Executing command: `{command}` with values {values}")
-        self.cursor.execute(command, values)
+        self.cursor.execute(command, values + wheres)
 
 class Engine:
     def __init__(self, name: str, models: list[type], migration: bool = False):
