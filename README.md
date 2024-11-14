@@ -4,3 +4,4 @@ Currently, only sqlite3 is supported, other databases should be supported with t
 
 ## TODO:
 - [ ] Create a documentation
+- [ ] Add support to MySQL and PostgreSQL
