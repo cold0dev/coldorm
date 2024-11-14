@@ -146,8 +146,9 @@ class Table:
         res = res.fetchall()
         return res
 
-    def cross_get(self, cross_with, where: WhereBuilder, cross: WhereBuilder):
-        command = f"SELECT * FROM {self.name} "
+    def cross_get(self, cross_with, where: WhereBuilder, cross: WhereBuilder, fields=["*"]):
+        fields = ",".join(fields)
+        command = f"SELECT {fields} FROM {self.name} "
         command += f"CROSS JOIN {cross_with} WHERE "
         
         for entry in where.get_command():
@@ -169,8 +170,9 @@ class Table:
         res = res.fetchall()
         return res
 
-    def get_all(self):
-        command = f"SELECT * FROM {self.name}"
+    def get_all(self, fields=["*"]):
+        fields = ",".join(fields)
+        command = f"SELECT {fields} FROM {self.name}"
         if LOG:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
