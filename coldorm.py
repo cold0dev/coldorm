@@ -85,13 +85,6 @@ def extract_by_fields(model, fields):
         output.append({"name": field, "value": value})
     return output
 
-def convert_value(v):
-    if type(v) is str:
-        return f"'{v}'"
-    else:
-        return str(v)
-
-
 class WhereBuilder:pass
 class WhereBuilder:
     def __init__(self, key, value) -> None:
@@ -118,7 +111,7 @@ def get_updated_fields(fields, entry):
         
         if v is None or type(v) is Field: continue
 
-        output.append({"name": field, "value": convert_value(v)})
+        output.append({"name": field, "value": v})
     
     return output
 
