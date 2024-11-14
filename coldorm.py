@@ -256,7 +256,7 @@ class Engine:
         for table in self.tables:
             if table.name == name:
                 return table
-        raise RuntimeError(f"Table {self.name} not found")
+        raise RuntimeError(f"Table {name} not found")
 
     def list_tables(self):
         command = "SELECT name FROM sqlite_master WHERE type='table'"
