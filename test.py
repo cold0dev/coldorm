@@ -8,12 +8,12 @@ if os.path.exists("test.db"):
 
 @dataclass
 class ExampleCrossTable:
-    id: int = Field(FieldType.INTEGER, True, True)
+    id: int = Field(FieldType.INTEGER, primary_key=True, auto_increment=True)
     cross_value: float = Field(FieldType.REAL)
 
 @dataclass
 class ExampleTable:
-    id: int = Field(FieldType.INTEGER, True, True)
+    id: int = Field(FieldType.INTEGER, primary_key=True, auto_increment=True)
     name: str = Field(FieldType.TEXT)
     value: float = Field(FieldType.REAL)
 
