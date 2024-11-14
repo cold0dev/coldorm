@@ -132,7 +132,9 @@ class Table:
     def get(self, where: WhereBuilder):
         command = f"SELECT * FROM {self.name} WHERE "
         for entry in where.get_command():
-          command += f"{entry["op"]} {entry["key"]} = ?"
+          op = entry["op"]
+          key = entry["key"]
+          command += f"{op} {key} = ?"
 
         if LOG:
             print(f"Executing command: `{command}`")
@@ -145,12 +147,17 @@ class Table:
         command += f"CROSS JOIN {cross_with} WHERE "
         
         for entry in where.get_command():
-          command += f"{entry["op"]} {self.name}.{entry["key"]} = ?"
+          op = entry["op"]
+          key = entry["key"]
+          command += f"{op} {key} = ?"
         
         command += " AND "
 
         for entry in cross.get_command():
-          command += f"{entry["op"]} {self.name}.{entry["key"]} = {cross_with}.{entry["value"]}"
+          op = entry["op"]
+          key = entry["key"]
+          value = entry["value"]
+          command += f"{op} {self.name}.{key} = {cross_with}.{value}"
 
         if LOG:
             print(f"Executing command: `{command}`")
@@ -192,7 +199,9 @@ class Table:
     def remove(self, where: WhereBuilder):
         command = f"DELETE FROM {self.name} WHERE "
         for entry in where.get_command():
-          command += f"{entry["op"]} {entry["key"]} = ?"
+          op = entry["op"]
+          key = entry["key"]
+          command += f"{op} {key} = ?"
 
         if LOG:
             print(f"Executing command: `{command}`")
@@ -209,7 +218,9 @@ class Table:
 
         command = command[:-2] + " WHERE "
         for entry in where.get_command():
-          command += f"{entry["op"]} {entry["key"]} = ?"
+          op = entry["op"]
+          key = entry["key"]
+          command += f"{op} {key} = ?"
         
         wheres = [entry["value"] for entry in where.get_command()]
 
