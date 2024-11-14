@@ -4,6 +4,6 @@ Currently, only sqlite3 is supported, other databases should be supported with t
 
 ## TODO:
 - [ ] Implement nice and smart result to class packer.  
-- [ ] Add ability to select fields with get and get_all.   
-- [ ] Add option to specifiy name of the table.
+- [x] Add ability to select fields with get and get_all.   
+- [x] Add option to specifiy name of the table.
 - [ ] Create a documentation
