@@ -129,19 +129,6 @@ class Table:
         self.fields = fields
         self.model = model
 
-    def _pack_entry(self, entry):
-        e = self.model()
-        fields = [field["name"] for field in self.fields]
-        for name, field in zip(fields, entry):
-            setattr(e, name, field)
-        return e
-
-    def _pack_entries(self, entries):
-        output = []
-        for entry in entries:
-            output.append(self._pack_entry(entry))
-        return output
-
     def get(self, where: WhereBuilder):
         command = f"SELECT * FROM {self.name} WHERE "
         for entry in where.get_command():
@@ -151,8 +138,25 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command, [entry["value"] for entry in where.get_command()])
         res = res.fetchall()
-        return self._pack_entries(res)
+        return res
 
+    def cross_get(self, cross_with, where: WhereBuilder, cross: WhereBuilder):
+        command = f"SELECT * FROM {self.name} "
+        command += f"CROSS JOIN {cross_with} WHERE "
+        
+        for entry in where.get_command():
+          command += f"{entry["op"]} {self.name}.{entry["key"]} = ?"
+        
+        command += " AND "
+
+        for entry in cross.get_command():
+          command += f"{entry["op"]} {self.name}.{entry["key"]} = {cross_with}.{entry["value"]}"
+
+        if LOG:
+            print(f"Executing command: `{command}`")
+        res = self.cursor.execute(command, [entry["value"] for entry in where.get_command()])
+        res = res.fetchall()
+        return res
 
     def get_all(self):
         command = f"SELECT * FROM {self.name}"
@@ -160,7 +164,7 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = res.fetchall()
-        return self._pack_entries(res)
+        return res
 
     def add(self, entry):
         fields = extract_by_fields(entry, self.fields)
