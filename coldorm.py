@@ -132,8 +132,9 @@ class Table:
         self.fields = fields
         self.model = model
 
-    def get(self, where: WhereBuilder):
-        command = f"SELECT * FROM {self.name} WHERE "
+    def get(self, where: WhereBuilder, fields=["*"]):
+        fields = ",".join(fields)
+        command = f"SELECT {fields} FROM {self.name} WHERE "
         for entry in where.get_command():
           op = entry["op"]
           key = entry["key"]

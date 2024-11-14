@@ -71,6 +71,11 @@ class TestTableMethods(unittest.TestCase):
         res = table.cross_get("ExampleCrossTable", wb, cross)
         print(res)
         self.assertEqual(len(res), 1)
+    
+    def test06_get_fields(self):
+        wb = WhereBuilder("name", "NAME1")
+        res = table.get(wb, fields=["id", "name"])
+        self.assertEqual(len(res[0]), 2)
 
 if __name__ == '__main__':
     unittest.main()
