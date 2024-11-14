@@ -95,20 +95,20 @@ def convert_value(v):
 class WhereBuilder:pass
 class WhereBuilder:
     def __init__(self, key, value) -> None:
-        self.command = []
-        self.command.append({"key": key, "value": value, "op": ""}) 
+        self.conditions = []
+        self.conditions.append({"key": key, "value": value, "op": ""}) 
 
     
     def AND(self, key, value) -> WhereBuilder:
-        self.command.append({"key": key, "value": value, "op": "and"}) 
+        self.conditions.append({"key": key, "value": value, "op": "and"}) 
         return self
     
     def OR(self, key, value) -> WhereBuilder:
-        self.command.append({"key": key, "value": value, "op": "or"}) 
+        self.conditions.append({"key": key, "value": value, "op": "or"}) 
         return self
     
-    def get_command(self):
-        return self.command
+    def get_conditions(self):
+        return self.conditions
 
 def get_updated_fields(fields, entry):
     output = []
@@ -134,14 +134,14 @@ class Table:
     def get(self, where: WhereBuilder, fields=["*"]):
         fields = ",".join(fields)
         command = f"SELECT {fields} FROM {self.name} WHERE "
-        for entry in where.get_command():
+        for entry in where.get_conditions():
           op = entry["op"]
           key = entry["key"]
           command += f"{op} {key} = ?"
 
         if LOG:
             print(f"Executing command: `{command}`")
-        res = self.cursor.execute(command, [entry["value"] for entry in where.get_command()])
+        res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
         res = res.fetchall()
         return res
 
@@ -150,14 +150,14 @@ class Table:
         command = f"SELECT {fields} FROM {self.name} "
         command += f"CROSS JOIN {cross_with} WHERE "
         
-        for entry in where.get_command():
+        for entry in where.get_conditions():
           op = entry["op"]
           key = entry["key"]
           command += f"{op} {key} = ?"
         
         command += " AND "
 
-        for entry in cross.get_command():
+        for entry in cross.get_conditions():
           op = entry["op"]
           key = entry["key"]
           value = entry["value"]
@@ -165,7 +165,7 @@ class Table:
 
         if LOG:
             print(f"Executing command: `{command}`")
-        res = self.cursor.execute(command, [entry["value"] for entry in where.get_command()])
+        res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
         res = res.fetchall()
         return res
 
@@ -203,14 +203,14 @@ class Table:
 
     def remove(self, where: WhereBuilder):
         command = f"DELETE FROM {self.name} WHERE "
-        for entry in where.get_command():
+        for entry in where.get_conditions():
           op = entry["op"]
           key = entry["key"]
           command += f"{op} {key} = ?"
 
         if LOG:
             print(f"Executing command: `{command}`")
-        self.cursor.execute(command, [entry["value"] for entry in where.get_command()])
+        self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
 
     def update(self, where: WhereBuilder, entry):
         command = f"UPDATE {self.name} SET "
@@ -222,12 +222,12 @@ class Table:
             command += f"{name} = ?, "
 
         command = command[:-2] + " WHERE "
-        for entry in where.get_command():
+        for entry in where.get_conditions():
           op = entry["op"]
           key = entry["key"]
           command += f"{op} {key} = ?"
         
-        wheres = [entry["value"] for entry in where.get_command()]
+        wheres = [entry["value"] for entry in where.get_conditions()]
 
         if LOG:
             print(f"Executing command: `{command}` with values {values}")

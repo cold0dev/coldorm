@@ -71,7 +71,6 @@ class TestTableMethods(unittest.TestCase):
         wb = WhereBuilder("name", "NAME1")
         cross = WhereBuilder("id", "id")
         res = table.cross_get("named_table", wb, cross)
-        print(res)
         self.assertEqual(len(res), 1)
     
     def test06_get_fields(self):
