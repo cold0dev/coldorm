@@ -124,6 +124,16 @@ class Table:
         self.fields = fields
         self.model = model
 
+    def pack_entry(self, entry, fields):
+        out = {}
+        if fields[0] == "*":
+            fields = [field["name"] for field in self.fields]
+        
+        for field, value in zip(fields, entry):
+            out[field] = value
+
+        return out
+
     def get(self, where: WhereBuilder, fields=["*"]):
         fields = ",".join(fields)
         command = f"SELECT {fields} FROM {self.name} WHERE "
@@ -136,30 +146,33 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
         res = res.fetchall()
+        res = [self.pack_entry(r, fields) for r in res]
         return res
 
-    def cross_get(self, cross_with, where: WhereBuilder, cross: WhereBuilder, fields=["*"]):
+    # cross_get needs explicit fields
+    def cross_get(self, cross_with, where: WhereBuilder, cross: WhereBuilder, fields):
         fields = ",".join(fields)
         command = f"SELECT {fields} FROM {self.name} "
         command += f"CROSS JOIN {cross_with} WHERE "
         
         for entry in where.get_conditions():
-          op = entry["op"]
-          key = entry["key"]
-          command += f"{op} {key} = ?"
+            op = entry["op"]
+            key = entry["key"]
+            command += f"{op} {key} = ?"
         
         command += " AND "
 
         for entry in cross.get_conditions():
-          op = entry["op"]
-          key = entry["key"]
-          value = entry["value"]
-          command += f"{op} {self.name}.{key} = {cross_with}.{value}"
+            op = entry["op"]
+            key = entry["key"]
+            value = entry["value"]
+            command += f"{op} {self.name}.{key} = {cross_with}.{value}"
 
         if LOG:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
         res = res.fetchall()
+        res = [self.pack_entry(r, fields) for r in res]
         return res
 
     def get_all(self, fields=["*"]):
@@ -169,6 +182,7 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = res.fetchall()
+        res = [self.pack_entry(r, fields) for r in res]
         return res
 
     def add(self, entry):
@@ -197,9 +211,9 @@ class Table:
     def remove(self, where: WhereBuilder):
         command = f"DELETE FROM {self.name} WHERE "
         for entry in where.get_conditions():
-          op = entry["op"]
-          key = entry["key"]
-          command += f"{op} {key} = ?"
+            op = entry["op"]
+            key = entry["key"]
+            command += f"{op} {key} = ?"
 
         if LOG:
             print(f"Executing command: `{command}`")
@@ -216,9 +230,9 @@ class Table:
 
         command = command[:-2] + " WHERE "
         for entry in where.get_conditions():
-          op = entry["op"]
-          key = entry["key"]
-          command += f"{op} {key} = ?"
+            op = entry["op"]
+            key = entry["key"]
+            command += f"{op} {key} = ?"
         
         wheres = [entry["value"] for entry in where.get_conditions()]
 
