@@ -45,10 +45,9 @@ class Field:
 
 def extract_name_from_model(model):
     try:
-      return model.__name__
+      return model.table_name
     except:
-      return str(model).split("'")[1].split(".")[1]
-
+      return model.__name__
 
 def extract_fields_from_model(model):
     fields = []

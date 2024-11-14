@@ -8,8 +8,10 @@ if os.path.exists("test.db"):
 
 @dataclass
 class ExampleCrossTable:
+    table_name = "named_table"
     id: int = Field(FieldType.INTEGER, primary_key=True, auto_increment=True)
     cross_value: float = Field(FieldType.REAL)
+
 
 @dataclass
 class ExampleTable:
@@ -19,7 +21,7 @@ class ExampleTable:
 
 orm = Engine("test", [ExampleCrossTable, ExampleTable], True)
 
-cross_table = orm.get_table("ExampleCrossTable")
+cross_table = orm.get_table("named_table")
 cross_table.add(ExampleCrossTable(None, 20.0))
 cross_table.add(ExampleCrossTable(None, 30.0))
 
@@ -68,7 +70,7 @@ class TestTableMethods(unittest.TestCase):
     def test05_cross_get(self):
         wb = WhereBuilder("name", "NAME1")
         cross = WhereBuilder("id", "id")
-        res = table.cross_get("ExampleCrossTable", wb, cross)
+        res = table.cross_get("named_table", wb, cross)
         print(res)
         self.assertEqual(len(res), 1)
     
@@ -81,7 +83,7 @@ class TestTableMethods(unittest.TestCase):
         res = table.get_all(fields=["id", "name"])
         self.assertEqual(len(res[0]), 2)
         
-        res = table.cross_get("ExampleCrossTable", wb, cross, fields=["name", "value", "cross_value"])
+        res = table.cross_get("named_table", wb, cross, fields=["name", "value", "cross_value"])
         self.assertEqual(len(res[0]), 3)
 
 if __name__ == '__main__':
