@@ -124,15 +124,6 @@ class Table:
         self.fields = fields
         self.model = model
 
-    def pack_entry(self, entry, fields):
-        out = {}
-        if fields[0] == "*":
-            fields = [field["name"] for field in self.fields]
-        
-        for field, value in zip(fields, entry):
-            out[field] = value
-
-        return out
 
     def get(self, where: WhereBuilder, fields=["*"]):
         fields = ",".join(fields)
@@ -145,8 +136,8 @@ class Table:
         if LOG:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
-        res = res.fetchall()
-        res = [self.pack_entry(r, fields) for r in res]
+        
+        res = [dict(row) for row in res.fetchall()]
         return res
 
     # cross_get needs explicit fields
@@ -171,8 +162,7 @@ class Table:
         if LOG:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
-        res = res.fetchall()
-        res = [self.pack_entry(r, fields) for r in res]
+        res = [dict(row) for row in res.fetchall()]
         return res
 
     def get_all(self, fields=["*"]):
@@ -181,8 +171,7 @@ class Table:
         if LOG:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
-        res = res.fetchall()
-        res = [self.pack_entry(r, fields) for r in res]
+        res = [dict(row) for row in res.fetchall()]
         return res
 
     def add(self, entry):
@@ -246,6 +235,7 @@ class Engine:
         self.tables = []
 
         self.connection = sqlite3.connect(f"{self.name}.db")
+        self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
 
         for model in models:
