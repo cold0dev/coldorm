@@ -124,6 +124,14 @@ class Table:
         self.fields = fields
         self.model = model
 
+    def _pack_to_class(self, entries):
+        out = []
+        for entry in entries:
+            m = self.model()
+            for k,v in entry.items():
+                setattr(m, k, v)
+            out.append(m)
+        return out
 
     def get(self, where: WhereBuilder, fields=["*"]):
         fields = ",".join(fields)
@@ -138,6 +146,7 @@ class Table:
         res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
         
         res = [dict(row) for row in res.fetchall()]
+        res = self._pack_to_class(res)
         return res
 
     # cross_get needs explicit fields
@@ -163,6 +172,7 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command, [entry["value"] for entry in where.get_conditions()])
         res = [dict(row) for row in res.fetchall()]
+        res = self._pack_to_class(res)
         return res
 
     def get_all(self, fields=["*"]):
@@ -172,6 +182,7 @@ class Table:
             print(f"Executing command: `{command}`")
         res = self.cursor.execute(command)
         res = [dict(row) for row in res.fetchall()]
+        res = self._pack_to_class(res)
         return res
 
     def add(self, entry):

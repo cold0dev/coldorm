@@ -39,51 +39,51 @@ class TestTableMethods(unittest.TestCase):
     def test01_get_all(self):
         res = table.get_all()
         self.assertEqual(len(res), 3)
-        self.assertEqual(res[0]["id"], 1)
-        self.assertEqual(res[1]["id"], 2)
-        self.assertEqual(res[2]["id"], 3)
+        self.assertEqual(res[0].id, 1)
+        self.assertEqual(res[1].id, 2)
+        self.assertEqual(res[2].id, 3)
 
     def test02_get(self):
         wb = WhereBuilder("name", "NAME2")
         res = table.get(wb)
         self.assertEqual(len(res), 1)
-        self.assertEqual(res[0]["id"], 2)
+        self.assertEqual(res[0].id, 2)
         wb = WhereBuilder("name", "NAME1").OR("name", "NAME3")
         res = table.get(wb)
         self.assertEqual(len(res), 2)
-        self.assertEqual(res[0]["id"], 1)
-        self.assertEqual(res[1]["id"], 3)
+        self.assertEqual(res[0].id, 1)
+        self.assertEqual(res[1].id, 3)
 
     def test03_update(self):
         wb = WhereBuilder("name", "NAME2")
         new = ExampleTable(None, None, 4.0)
         table.update(wb, new)
         res = table.get(wb)
-        self.assertEqual(res[0]["value"], 4.0)
+        self.assertEqual(res[0].value, 4.0)
 
     def test04_remove(self):
         wb = WhereBuilder("name", "NAME2")
         table.remove(wb)
         res = table.get_all()
-        self.assertEqual(res[1]["id"], 3)
+        self.assertEqual(res[1].id, 3)
     
     def test05_cross_get(self):
         wb = WhereBuilder("name", "NAME1")
         cross = WhereBuilder("id", "id")
         res = table.cross_get("named_table", wb, cross, fields=["name"])
-        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0].name, "NAME1")
     
     def test06_get_fields(self):
         wb = WhereBuilder("name", "NAME1")
         cross = WhereBuilder("id", "id")
         res = table.get(wb, fields=["id", "name"])
-        self.assertEqual(len(res[0]), 2)
+        self.assertEqual(res[0].id, 1)
         
         res = table.get_all(fields=["id", "name"])
-        self.assertEqual(len(res[0]), 2)
+        self.assertEqual(res[1].name, "NAME3")
         
         res = table.cross_get("named_table", wb, cross, fields=["name", "value", "cross_value"])
-        self.assertEqual(len(res[0]), 3)
+        self.assertEqual(res[0].cross_value, 20)
 
 if __name__ == '__main__':
     unittest.main()
